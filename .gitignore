@@ -1,3 +1,7 @@
+#output from this tool
+output/*.csv
+output/*.jpg
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
