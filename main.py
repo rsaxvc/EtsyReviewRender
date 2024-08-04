@@ -6,10 +6,8 @@ from PIL import Image, ImageDraw, ImageFont
 
 #Configuration
 OUTWIDTH = 470 #Output image width
-OUTHEIGHT = 200 #Output image height
 SCALE = 2 #Internal scaling for text rendering quality
 IMWIDTH = SCALE * OUTWIDTH #Temporary drawing image width
-IMHEIGHT = SCALE * OUTHEIGHT #...height
 HEADERFONTSIZE = 35 * SCALE #Roughly font height in temporary image
 HEADERFONTPATH = "/usr/share/fonts/truetype/open-sans/OpenSans-Light.ttf"
 BODYFONTSIZE = 20 * SCALE
@@ -20,19 +18,25 @@ STARFILE = "star.png"
 im_star = Image.open(STARFILE)
 
 #Text Layout - these are in *SCALE coords
-header_x = 10
+padding = 10
+header_x = padding
 header_y = 0
-star_x = header_x
+star_x = padding
 star_y = header_y + int(1.8 * HEADERFONTSIZE)
-message_x = star_x
-message_w = IMWIDTH - 2 * message_x
+message_x = padding
 message_y = star_y + int(SCALE * 1.2 * im_star.size[1])
+message_w = IMWIDTH - 2 * padding
 
 #Draws UNDERLINEDNAME plus regular text
 def draw_header_text(draw, pos, text1, text2, font, **options):
-	print(text1 + text2)
-	twidth, theight = draw.textsize(text1, font=font)
-	lx, ly = pos[0], pos[1] + theight
+	#New, bounding-box based way
+	(tleft, ttop, tright, tbottom) = draw.textbbox(pos, text1, font=font)
+	twidth = tright - tleft
+	theight = tbottom - ttop
+	lx, ly = tleft, HEADERFONTSIZE + 3 * SCALE
+	#Old, deprecated way
+	#twidth, theight = draw.textsize(text1, font=font)
+	#lx, ly = pos[0], pos[1] + theight
 	draw.text(pos, text1 + text2, (0,0,0), font=font, **options)
 	draw.line((lx, ly, lx + twidth, ly), (0,0,0), **options, width=SCALE)
 
@@ -55,6 +59,16 @@ def get_wrapped_text(text: str, font: ImageFont.ImageFont,
                 lines.append(word)
         return '\n'.join(lines)
 
+headerfont = ImageFont.truetype(HEADERFONTPATH, HEADERFONTSIZE)
+bodyfont = ImageFont.truetype(BODYFONTPATH, BODYFONTSIZE)
+
+#Work out the bottom of the body text, given the location
+def textBottom(pos, text, font):
+	image = Image.new("RGB", (1,1), (255,255,255))
+	draw = ImageDraw.Draw(image)
+	(tleft, ttop, tright, tbottom) = draw.textbbox(pos, text, font=font)
+	return tbottom
+
 with open('reviews.json', 'r') as jfile:
 	data = json.load(jfile)
 
@@ -70,21 +84,26 @@ with open('reviews.json', 'r') as jfile:
 			writer.writerow(item)
 
 	for item in data:
-		print(item)
 		reviewer = item["reviewer"]
 		date = item["date_reviewed"]
 		stars = int(item["star_rating"])
 		message = item["message"]
 
-		#Create an image larger than needed for text rendering
+		#Skip unplausibly short messages
+		if(len(message) < 5):
+			continue
+
+		#wrap text by breaking on lines.
+		wrapped = get_wrapped_text(message, font=bodyfont, line_length=message_w)
+
+		#Compute image height and create image
+		IMHEIGHT = textBottom((message_x, message_y), wrapped, font=bodyfont) + padding * 3
+		OUTHEIGHT = int((IMHEIGHT + SCALE / 2) / SCALE)
 		image = Image.new("RGB", (IMWIDTH,IMHEIGHT), (255,255,255))
 		draw = ImageDraw.Draw(image)
-		headerfont = ImageFont.truetype(HEADERFONTPATH, HEADERFONTSIZE)
-		bodyfont = ImageFont.truetype(BODYFONTPATH, BODYFONTSIZE)
 
-		#Render out wrapped text
+		#Render header and body text
 		draw_header_text(draw, (header_x,header_y), reviewer, " on " + date, headerfont)
-		wrapped = get_wrapped_text(message, font=bodyfont, line_length=IMWIDTH - message_w)
 		draw.text((message_x,message_y), wrapped, (0,0,0), font=bodyfont)
 
 		#Scale down to output size
@@ -94,4 +113,4 @@ with open('reviews.json', 'r') as jfile:
 		draw_stars(img_resized, (star_x // SCALE, star_y // SCALE), stars)
 
 		img_resized.save('output/' + reviewer + ".jpg", format='JPEG', subsampling=0, quality=85)
-		img_resized.show()
+		#img_resized.show()
