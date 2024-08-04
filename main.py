@@ -10,8 +10,10 @@ OUTHEIGHT = 200 #Output image height
 SCALE = 2 #Internal scaling for text rendering quality
 IMWIDTH = SCALE * OUTWIDTH #Temporary drawing image width
 IMHEIGHT = SCALE * OUTHEIGHT #...height
-FONTSIZE = 35 * SCALE #Roughly font height in temporary image
-FONTPATH = "/usr/share/fonts/truetype/open-sans/OpenSans-Light.ttf"
+HEADERFONTSIZE = 35 * SCALE #Roughly font height in temporary image
+HEADERFONTPATH = "/usr/share/fonts/truetype/open-sans/OpenSans-Light.ttf"
+BODYFONTSIZE = 20 * SCALE
+BODYFONTPATH = "/usr/share/fonts/truetype/open-sans/OpenSans-Light.ttf"
 STARFILE = "star.png"
 
 def draw_header_text(draw, pos, text1, text2, font, **options):
@@ -53,18 +55,19 @@ with open('reviews.json', 'r') as jfile:
 		header_x = 10
 		header_y = 0
 		star_x = header_x
-		star_y = header_y + int(2 * FONTSIZE)
+		star_y = header_y + int(1.8 * HEADERFONTSIZE)
 		message_x = star_x
-		message_y = star_y + int(1.2 * FONTSIZE)
+		message_y = star_y + int(SCALE * 1.2 * im_star.size[1])
 
 		#Create an image larger than needed for text rendering
 		image = Image.new("RGB", (IMWIDTH,IMHEIGHT), (255,255,255))
 		draw = ImageDraw.Draw(image)
-		font = ImageFont.truetype(FONTPATH, FONTSIZE)
+		headerfont = ImageFont.truetype(HEADERFONTPATH, HEADERFONTSIZE)
+		bodyfont = ImageFont.truetype(BODYFONTPATH, BODYFONTSIZE)
 
 		#Render out text
-		draw_header_text(draw, (header_x,header_y), reviewer, " on " + date, font)
-		draw.text((message_x,message_y), message, (0,0,0), font=font)
+		draw_header_text(draw, (header_x,header_y), reviewer, " on " + date, headerfont)
+		draw.text((message_x,message_y), message, (0,0,0), font=bodyfont)
 
 		#Scale down to output size
 		img_resized = image.resize((OUTWIDTH, OUTHEIGHT), Image.LANCZOS)
@@ -72,5 +75,5 @@ with open('reviews.json', 'r') as jfile:
 		#Draw stars in output scale
 		draw_stars(img_resized, (star_x // SCALE, star_y // SCALE), stars)
 
-		img_resized.save('output/' + reviewer + ".jpg", format='JPEG', subsampling=0, quality=95)
-#		img_resized.show()
+		img_resized.save('output/' + reviewer + ".jpg", format='JPEG', subsampling=0, quality=85)
+		img_resized.show()
