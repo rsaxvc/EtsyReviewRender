@@ -19,12 +19,13 @@ STARFILE = "star.png"
 #Load star-image early so we can know its dimensions
 im_star = Image.open(STARFILE)
 
-#Text Layout
+#Text Layout - these are in *SCALE coords
 header_x = 10
 header_y = 0
 star_x = header_x
 star_y = header_y + int(1.8 * HEADERFONTSIZE)
 message_x = star_x
+message_w = IMWIDTH - 2 * message_x
 message_y = star_y + int(SCALE * 1.2 * im_star.size[1])
 
 #Draws UNDERLINEDNAME plus regular text
@@ -40,6 +41,19 @@ def draw_stars(im, pos, n):
 	for i in range(n):
 		im.paste(im_star, pos)
 		pos = (pos[0] + im_star.size[0], pos[1])
+
+#Compute text wrapping
+#From: https://stackoverflow.com/a/67203353/1125660
+def get_wrapped_text(text: str, font: ImageFont.ImageFont,
+                     line_length: int):
+        lines = ['']
+        for word in text.split():
+            line = f'{lines[-1]} {word}'.strip()
+            if font.getlength(line) <= line_length:
+                lines[-1] = line
+            else:
+                lines.append(word)
+        return '\n'.join(lines)
 
 with open('reviews.json', 'r') as jfile:
 	data = json.load(jfile)
@@ -68,9 +82,10 @@ with open('reviews.json', 'r') as jfile:
 		headerfont = ImageFont.truetype(HEADERFONTPATH, HEADERFONTSIZE)
 		bodyfont = ImageFont.truetype(BODYFONTPATH, BODYFONTSIZE)
 
-		#Render out text
+		#Render out wrapped text
 		draw_header_text(draw, (header_x,header_y), reviewer, " on " + date, headerfont)
-		draw.text((message_x,message_y), message, (0,0,0), font=bodyfont)
+		wrapped = get_wrapped_text(message, font=bodyfont, line_length=IMWIDTH - message_w)
+		draw.text((message_x,message_y), wrapped, (0,0,0), font=bodyfont)
 
 		#Scale down to output size
 		img_resized = image.resize((OUTWIDTH, OUTHEIGHT), Image.LANCZOS)
