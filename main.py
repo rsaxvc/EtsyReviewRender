@@ -16,6 +16,18 @@ BODYFONTSIZE = 20 * SCALE
 BODYFONTPATH = "/usr/share/fonts/truetype/open-sans/OpenSans-Light.ttf"
 STARFILE = "star.png"
 
+#Load star-image early so we can know its dimensions
+im_star = Image.open(STARFILE)
+
+#Text Layout
+header_x = 10
+header_y = 0
+star_x = header_x
+star_y = header_y + int(1.8 * HEADERFONTSIZE)
+message_x = star_x
+message_y = star_y + int(SCALE * 1.2 * im_star.size[1])
+
+#Draws UNDERLINEDNAME plus regular text
 def draw_header_text(draw, pos, text1, text2, font, **options):
 	print(text1 + text2)
 	twidth, theight = draw.textsize(text1, font=font)
@@ -23,8 +35,7 @@ def draw_header_text(draw, pos, text1, text2, font, **options):
 	draw.text(pos, text1 + text2, (0,0,0), font=font, **options)
 	draw.line((lx, ly, lx + twidth, ly), (0,0,0), **options, width=SCALE)
 
-im_star = Image.open(STARFILE)
-
+#Draws N stars starting at pos and to the right
 def draw_stars(im, pos, n):
 	for i in range(n):
 		im.paste(im_star, pos)
@@ -36,7 +47,6 @@ with open('reviews.json', 'r') as jfile:
 	fieldnames = set()
 	for item in data:
 		fieldnames = fieldnames.union(item.keys())
-	print(fieldnames)
 
 	with open('output/temp.csv', 'w', newline='') as csvfile:
 		writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -51,13 +61,6 @@ with open('reviews.json', 'r') as jfile:
 		date = item["date_reviewed"]
 		stars = int(item["star_rating"])
 		message = item["message"]
-
-		header_x = 10
-		header_y = 0
-		star_x = header_x
-		star_y = header_y + int(1.8 * HEADERFONTSIZE)
-		message_x = star_x
-		message_y = star_y + int(SCALE * 1.2 * im_star.size[1])
 
 		#Create an image larger than needed for text rendering
 		image = Image.new("RGB", (IMWIDTH,IMHEIGHT), (255,255,255))
