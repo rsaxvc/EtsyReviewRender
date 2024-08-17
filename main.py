@@ -1,21 +1,38 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import argparse
 import csv
 import json
 from PIL import Image, ImageDraw, ImageFont
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--width", help="pixel-width of rendered images",
+                    type=int, default=470)
+parser.add_argument("--headerFontSize", help="pixel-height of header-font",
+                    type=int, default=21)
+parser.add_argument("--headerFontTtf", help="path to TTF file for header-font",
+                    type=str, default="OpenSans-Light.ttf")
+parser.add_argument("--bodyFontSize", help="pixel-height of body-font",
+                    type=int, default=20)
+parser.add_argument("--bodyFontTtf", help="path to TTF file for body-font",
+                    type=str, default="OpenSans-Light.ttf")
+parser.add_argument("--minMsgLen", help="minimum message length to keep",
+                    type=int, default=5)
+parser.add_argument("--starFile", help="path to a star image",
+                    type=str, default="star.png")
+parser.add_argument("inputFile", help="input JSON file, exported from Etsy",
+                    type=str, default="example_reviews.json")
+args = parser.parse_args()
+
+
 #Configuration
-OUTWIDTH = 470 #Output image width
 SCALE = 2 #Internal scaling for text rendering quality
-IMWIDTH = SCALE * OUTWIDTH #Temporary drawing image width
-HEADERFONTSIZE = 21 * SCALE #Roughly font height in temporary image
-HEADERFONTPATH = "OpenSans-Light.ttf"
-BODYFONTSIZE = 20 * SCALE
-BODYFONTPATH = "OpenSans-Light.ttf"
-STARFILE = "star.png"
+IMWIDTH = SCALE * args.width #Temporary drawing image width
+HEADERFONTSIZE = args.headerFontSize * SCALE #Roughly font height in temporary image
+BODYFONTSIZE = args.bodyFontSize * SCALE
 
 #Load star-image early so we can know its dimensions
-im_star = Image.open(STARFILE)
+im_star = Image.open(args.starFile)
 
 #Text Layout - these are in *SCALE coords
 padding = 10
@@ -59,8 +76,8 @@ def get_wrapped_text(text: str, font: ImageFont.ImageFont,
                 lines.append(word)
         return '\n'.join(lines)
 
-headerfont = ImageFont.truetype(HEADERFONTPATH, HEADERFONTSIZE)
-bodyfont = ImageFont.truetype(BODYFONTPATH, BODYFONTSIZE)
+headerfont = ImageFont.truetype(args.headerFontTtf, HEADERFONTSIZE)
+bodyfont = ImageFont.truetype(args.bodyFontTtf, BODYFONTSIZE)
 
 #Work out the bottom of the body text, given the location
 def textBottom(pos, text, font):
@@ -69,7 +86,7 @@ def textBottom(pos, text, font):
 	(tleft, ttop, tright, tbottom) = draw.textbbox(pos, text, font=font)
 	return tbottom
 
-with open('example_reviews.json', 'r') as jfile:
+with open(args.inputFile, 'r') as jfile:
 	data = json.load(jfile)
 
 	fieldnames = set()
@@ -91,7 +108,7 @@ with open('example_reviews.json', 'r') as jfile:
 		order_id = item["order_id"]
 
 		#Skip unplausibly short messages
-		if(len(message) < 5):
+		if(len(message) < args.minMsgLen):
 			continue
 
 		#wrap text by breaking on lines.
@@ -108,10 +125,10 @@ with open('example_reviews.json', 'r') as jfile:
 		draw.text((message_x,message_y), wrapped, (0,0,0), font=bodyfont)
 
 		#Scale down to output size
-		img_resized = image.resize((OUTWIDTH, OUTHEIGHT), Image.LANCZOS)
+		img_resized = image.resize((args.width, OUTHEIGHT), Image.LANCZOS)
 
 		#Draw stars in output scale
-		draw_stars(img_resized, (star_x // SCALE, star_y // SCALE), stars)
+		draw_stars(img_resized, ((star_x + SCALE//2)// SCALE, (star_y + SCALE//2)// SCALE), stars)
 
 		out_filename = 'output/' + str(order_id) + '_' + reviewer + ".jpg"
 		img_resized.save(out_filename, format='JPEG', subsampling=0, quality=85)
