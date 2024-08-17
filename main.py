@@ -8,7 +8,7 @@ from PIL import Image, ImageDraw, ImageFont
 OUTWIDTH = 470 #Output image width
 SCALE = 2 #Internal scaling for text rendering quality
 IMWIDTH = SCALE * OUTWIDTH #Temporary drawing image width
-HEADERFONTSIZE = 35 * SCALE #Roughly font height in temporary image
+HEADERFONTSIZE = 21 * SCALE #Roughly font height in temporary image
 HEADERFONTPATH = "/usr/share/fonts/truetype/open-sans/OpenSans-Light.ttf"
 BODYFONTSIZE = 20 * SCALE
 BODYFONTPATH = "/usr/share/fonts/truetype/open-sans/OpenSans-Light.ttf"
@@ -88,6 +88,7 @@ with open('reviews.json', 'r') as jfile:
 		date = item["date_reviewed"]
 		stars = int(item["star_rating"])
 		message = item["message"]
+		order_id = item["order_id"]
 
 		#Skip unplausibly short messages
 		if(len(message) < 5):
@@ -112,5 +113,6 @@ with open('reviews.json', 'r') as jfile:
 		#Draw stars in output scale
 		draw_stars(img_resized, (star_x // SCALE, star_y // SCALE), stars)
 
-		img_resized.save('output/' + reviewer + ".jpg", format='JPEG', subsampling=0, quality=85)
+		out_filename = 'output/' + str(order_id) + '_' + reviewer + ".jpg"
+		img_resized.save(out_filename, format='JPEG', subsampling=0, quality=85)
 		#img_resized.show()
