@@ -9,9 +9,9 @@ OUTWIDTH = 470 #Output image width
 SCALE = 2 #Internal scaling for text rendering quality
 IMWIDTH = SCALE * OUTWIDTH #Temporary drawing image width
 HEADERFONTSIZE = 21 * SCALE #Roughly font height in temporary image
-HEADERFONTPATH = "/usr/share/fonts/truetype/open-sans/OpenSans-Light.ttf"
+HEADERFONTPATH = "OpenSans-Light.ttf"
 BODYFONTSIZE = 20 * SCALE
-BODYFONTPATH = "/usr/share/fonts/truetype/open-sans/OpenSans-Light.ttf"
+BODYFONTPATH = "OpenSans-Light.ttf"
 STARFILE = "star.png"
 
 #Load star-image early so we can know its dimensions
@@ -69,7 +69,7 @@ def textBottom(pos, text, font):
 	(tleft, ttop, tright, tbottom) = draw.textbbox(pos, text, font=font)
 	return tbottom
 
-with open('reviews.json', 'r') as jfile:
+with open('example_reviews.json', 'r') as jfile:
 	data = json.load(jfile)
 
 	fieldnames = set()

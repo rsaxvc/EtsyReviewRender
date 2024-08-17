@@ -1,0 +1,23 @@
+[
+  {
+    "reviewer": "rsaxvc",
+    "date_reviewed": "08/17/2024",
+    "star_rating": 5,
+    "message": "love it would buy again",
+    "order_id": 1
+  },
+  {
+    "reviewer": "BummerGuy",
+    "date_reviewed": "07/03/2024",
+    "star_rating": 4,
+    "message": "Etsy-Render is only ok sometimes",
+    "order_id": 2
+  },
+  {
+    "reviewer": "ExampleReviewer",
+    "date_reviewed": "07/22/2024",
+    "star_rating": 5,
+    "message": "Etsy-Render is the best!",
+    "order_id": 3
+  }
+]
